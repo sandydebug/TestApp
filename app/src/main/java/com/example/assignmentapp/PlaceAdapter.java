@@ -19,6 +19,8 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.example.assignmentapp.database.AppDatabase;
+import com.example.assignmentapp.utils.DatabaseInitializer;
 
 import java.util.List;
 
@@ -48,9 +50,9 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
 
         final POJO placeModel = placeslist.get(position);
         for(int i = 0 ;i<placeModel.getLanguages().size();i++ ){
-            if(languages.isEmpty())
+            if(languages == "")
                 languages = placeModel.getLanguages().get(i).name;
-            else
+            else if(languages != "")
                 languages = languages +","+placeModel.getLanguages().get(i).name;
         }
         Glide.with(mContext).load(placeModel.getFlag()).listener(new RequestListener() {
@@ -86,6 +88,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         holder.population.setText("Population - "+placeModel.getPopulation());
         holder.borders.setText("Borders - "+borders);
         holder.languages.setText("Languages - "+languages);
+        languages = "";
 
 
     }

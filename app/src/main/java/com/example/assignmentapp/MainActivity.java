@@ -1,5 +1,9 @@
 package com.example.assignmentapp;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -7,7 +11,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
+import com.example.assignmentapp.dao.UserDao;
+import com.example.assignmentapp.database.AppDatabase;
+import com.example.assignmentapp.utils.DatabaseInitializer;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -38,14 +46,25 @@ public class MainActivity extends AppCompatActivity {
     private List<POJO> list = new ArrayList<>();
     private IRetrofit apiService;
     private String baseurl = "https://restcountries.eu/rest/v2/region/";
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        sharedPreferences = this.getSharedPreferences("ACT",MODE_PRIVATE);
         mRecyclerView = findViewById(R.id.countryrec);
         setupRetrofitAndOkHttp();
-        runAPI();
+        if(!sharedPreferences.getString("ACT","No").equals("yes")) {
+            runAPI();
+            Toast.makeText(MainActivity.this, "Data from API", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(MainActivity.this,"Data from Database",Toast.LENGTH_SHORT).show();
+            GetDbAsync task = new GetDbAsync(MainActivity.this);
+            task.execute();
+        }
     }
 
     public void runAPI(){
@@ -57,9 +76,12 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
                     try {
-
                         list = response.body();
+                        DatabaseInitializer.populateAsync(AppDatabase.getAppDatabase(MainActivity.this), list,MainActivity.this);
                         buildrecyclerview();
+                        editor = sharedPreferences.edit();
+                        editor.putString("ACT", "yes");
+                        editor.apply();
                     } catch (Exception e) {
                         e.printStackTrace();
                         Log.i("Error", e.getLocalizedMessage() + " " + response.toString());
@@ -169,5 +191,45 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
+
+    public void rundatabase(List<POJO> country){
+        list = country;
+        buildrecyclerview();
+    }
+
+    private class GetDbAsync extends AsyncTask<Void, Void, Void> {
+
+
+        private Context context;
+        private List<POJO> countries;
+
+        GetDbAsync(Context context) {
+            this.context = context;
+
+        }
+
+        @Override
+        protected Void doInBackground(final Void... params) {
+            //populateWithTestData(mDb);
+            AppDatabase db = Room.databaseBuilder(context,
+                    AppDatabase.class, "Countries").build();
+            UserDao userDao = db.userDao();
+            List<POJO> country = userDao.getAll();
+            countries = country;
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            rundatabase(countries);
+        }
     }
 }

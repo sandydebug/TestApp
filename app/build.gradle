@@ -48,4 +48,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+
+    implementation 'android.arch.persistence.room:runtime:' + rootProject.archRoomVersion;
+    annotationProcessor 'android.arch.persistence.room:compiler:' + rootProject.archRoomVersion;
 }
