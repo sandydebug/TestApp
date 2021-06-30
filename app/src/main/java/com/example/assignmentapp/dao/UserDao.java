@@ -24,4 +24,7 @@ public interface UserDao {
     @Insert
     void insertAll(List<POJO> list);
 
+    @Delete
+    void DeleteAll(List<POJO> list);
+
 }

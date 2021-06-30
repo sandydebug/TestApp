@@ -48,47 +48,50 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
     @Override
     public void onBindViewHolder(@NonNull final PlaceViewHolder holder, int position) {
 
-        final POJO placeModel = placeslist.get(position);
-        for(int i = 0 ;i<placeModel.getLanguages().size();i++ ){
-            if(languages == "")
-                languages = placeModel.getLanguages().get(i).name;
-            else if(languages != "")
-                languages = languages +","+placeModel.getLanguages().get(i).name;
-        }
-        Glide.with(mContext).load(placeModel.getFlag()).listener(new RequestListener() {
-            @Override
-            public boolean onLoadFailed(@Nullable GlideException e, Object model,
-                                        Target target, boolean isFirstResource) {
+        if(placeslist.size() != 0) {
+            final POJO placeModel = placeslist.get(position);
+            for (int i = 0; i < placeModel.getLanguages().size(); i++) {
+                if (languages == "")
+                    languages = placeModel.getLanguages().get(i).name;
+                else if (languages != "")
+                    languages = languages + "," + placeModel.getLanguages().get(i).name;
+            }
+            Glide.with(mContext).load(placeModel.getFlag()).listener(new RequestListener() {
+                @Override
+                public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                                            Target target, boolean isFirstResource) {
 
-                Log.e("tagile", e.getMessage(), e);
+                    Log.e("tagile", e.getMessage(), e);
 
-                // You can also log the individual causes:
-                for (Throwable t : e.getRootCauses()) {
-                    Log.e("tag123", "Caused by", t);
+                    // You can also log the individual causes:
+                    for (Throwable t : e.getRootCauses()) {
+                        Log.e("tag123", "Caused by", t);
+                    }
+                    // Or, to log all root causes locally, you can use the built in helper method:
+                    e.logRootCauses("tag");
+
+                    return false; // Allow calling onLoadFailed on the Target.
                 }
-                // Or, to log all root causes locally, you can use the built in helper method:
-                e.logRootCauses("tag");
 
-                return false; // Allow calling onLoadFailed on the Target.
-            }
+                @Override
+                public boolean onResourceReady(Object resource, Object model, Target target, DataSource dataSource, boolean isFirstResource) {
+                    //Toast.makeText(mContext,"image load",Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+            }).into(holder.imageView);
+            borders = placeModel.getBorders().toString().substring(1, placeModel.getBorders().toString().length() - 1);
+            //Picasso.get().load(placeModel.getFlag()).into(holder.imageView);
 
-            @Override
-            public boolean onResourceReady(Object resource, Object model, Target target, DataSource dataSource, boolean isFirstResource) {
-                //Toast.makeText(mContext,"image load",Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }).into(holder.imageView);
-        borders = placeModel.getBorders().toString().substring(1,placeModel.getBorders().toString().length()-1);
-        //Picasso.get().load(placeModel.getFlag()).into(holder.imageView);
+            holder.title.setText("Name - " + placeModel.getName());
+            holder.capital.setText("Capital - " + placeModel.getCapital());
+            holder.region.setText("Region - " + placeModel.getRegion());
+            holder.subregion.setText("SubRegion - " + placeModel.getSubregion());
+            holder.population.setText("Population - " + placeModel.getPopulation());
+            holder.borders.setText("Borders - " + borders);
+            holder.languages.setText("Languages - " + languages);
+            languages = "";
 
-        holder.title.setText("Name - "+placeModel.getName());
-        holder.capital.setText("Capital - "+placeModel.getCapital());
-        holder.region.setText("Region - "+placeModel.getRegion());
-        holder.subregion.setText("SubRegion - "+placeModel.getSubregion());
-        holder.population.setText("Population - "+placeModel.getPopulation());
-        holder.borders.setText("Borders - "+borders);
-        holder.languages.setText("Languages - "+languages);
-        languages = "";
+        }
 
 
     }

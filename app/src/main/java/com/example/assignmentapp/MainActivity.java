@@ -6,12 +6,16 @@ import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Delete;
 import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 import com.example.assignmentapp.dao.UserDao;
 import com.example.assignmentapp.database.AppDatabase;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private RecyclerView mRecyclerView;
+    private Button delete;
     private RecyclerView.LayoutManager mLayoutManager;
     private PlaceAdapter placeAdapter;
     private List<POJO> list = new ArrayList<>();
@@ -55,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         sharedPreferences = this.getSharedPreferences("ACT",MODE_PRIVATE);
         mRecyclerView = findViewById(R.id.countryrec);
+        delete = findViewById(R.id.delete);
         setupRetrofitAndOkHttp();
         if(!sharedPreferences.getString("ACT","No").equals("yes")) {
             runAPI();
@@ -65,6 +71,11 @@ public class MainActivity extends AppCompatActivity {
             GetDbAsync task = new GetDbAsync(MainActivity.this);
             task.execute();
         }
+
+        delete.setOnClickListener(v -> {
+            DeleteDbAsync task = new DeleteDbAsync(MainActivity.this);
+            task.execute();
+        });
     }
 
     public void runAPI(){
@@ -230,6 +241,35 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             rundatabase(countries);
+        }
+    }
+
+    private class DeleteDbAsync extends AsyncTask<Void, Void, Void> {
+
+
+        private Context context;
+
+       DeleteDbAsync(Context context) {
+            this.context = context;
+
+        }
+
+        @Override
+        protected Void doInBackground(final Void... params) {
+            //populateWithTestData(mDb);
+            RoomDatabase db = Room.databaseBuilder(context,
+                    AppDatabase.class, "Countries").build();
+            db.clearAllTables();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            editor = sharedPreferences.edit();
+            editor.putString("ACT", "No");
+            editor.apply();
+            Toast.makeText(context,"Deleted data from datbase",Toast.LENGTH_SHORT).show();
         }
     }
 }
